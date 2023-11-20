@@ -32,7 +32,7 @@ utiliser :
 conda env create -f binder/environment.yml
 ```
 
-Load the `mdda` conda environment:
+Load the `mdsa` conda environment:
 ```
 conda activate mdsa
 ```
@@ -47,4 +47,15 @@ To deactivate an active environment, use
 
 ```
 conda deactivate
+```
+
+## Get data
+
+Data files are directly downloaded from [Zenodo](https://doi.org/10.5281/zenodo.7856523).
+
+
+## Run the web application
+
+```bash
+streamlit run MDverse_data_analysis.py
 ```
