@@ -6,6 +6,9 @@ import pandas as pd
 import itables
 from itables import JavascriptFunction
 
+import streamlit as st
+import streamlit.components.v1 as components
+
 
 @st.cache_data
 def load_data() -> dict:
@@ -111,7 +114,6 @@ def update_contents(data: pd.DataFrame) -> None:
     
     result_data = find_dataset_by_id(data, datasetid)
 
-    print(result_data)
 
     if result_data.empty:
         st.sidebar.write("No result found.")

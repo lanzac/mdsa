@@ -57,5 +57,5 @@ Data files are directly downloaded from [Zenodo](https://doi.org/10.5281/zenodo.
 ## Run the web application
 
 ```bash
-streamlit run MDverse_data_analysis.py
+streamlit run MDverse_simulation_analysis.py
 ```
