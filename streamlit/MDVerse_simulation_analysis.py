@@ -22,9 +22,7 @@ def user_interaction() -> None:
     """
     wm.load_css()
 
-    select_data = "datasets"
-    data = wm.load_data()[select_data]
-    
+    data = wm.load_data()
     wm.display_details(data)
 
 

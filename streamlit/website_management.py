@@ -35,12 +35,12 @@ def load_data() -> dict:
     return dfs
 
 @st.cache_data
-def find_dataset_by_id(data: pd.DataFrame, dataset_id: str) -> pd.DataFrame:
+def find_dataset_by_id(datasets: pd.DataFrame, dataset_id: str) -> pd.DataFrame:
     """Find a dataset in the pd.DataFrame using a dataset ID.
 
     Parameters
     ----------
-    data: pd.DataFrame
+    datasets: pd.DataFrame
         Contains all the information from our extracted MD data.
     dataset_id: str
         The dataset ID used for searching.
@@ -62,7 +62,7 @@ def find_dataset_by_id(data: pd.DataFrame, dataset_id: str) -> pd.DataFrame:
     ]
 
     # Filter data for datasets containing the specified dataset_id
-    results = data[data["dataset_id"].str.contains(dataset_id, case=False, regex=False)]
+    results = datasets[datasets["dataset_id"].str.contains(dataset_id, case=False, regex=False)]
 
     # Select only the specified columns
     results = results[to_keep]
@@ -84,6 +84,46 @@ def find_dataset_by_id(data: pd.DataFrame, dataset_id: str) -> pd.DataFrame:
     else:
         return None
 
+@st.cache_data
+def find_files_by_dataset_id(files: pd.DataFrame, dataset_id: str) -> pd.DataFrame:
+    """Find a dataset in the pd.DataFrame using a dataset ID.
+
+    Parameters
+    ----------
+    data: pd.DataFrame
+        Contains all the information from our extracted MD data.
+    dataset_id: str
+        The dataset ID used for searching.
+
+    Returns
+    -------
+    pd.DataFrame
+        Returns the pd.DataFrame object filtered by dataset ID.
+    """
+    to_keep = [
+        "file_type",
+        "file_size",
+        "file_name",
+        "file_url",
+    ]
+
+    # Filter data for datasets containing the specified dataset_id
+    results = files[files["dataset_id"].str.contains(dataset_id, case=False, regex=False)]
+
+    # Select only the specified columns
+    results = results[to_keep]
+
+    # Rename columns for readability
+    results.columns = [
+        "File type",
+        "File size",
+        "File name",
+        "URL",
+    ]
+    if not results.empty:
+        return results
+    else:
+        return None
 
 def display_search_bar():
     """Configure the display of the search bar.
@@ -112,13 +152,14 @@ def update_contents(data: pd.DataFrame) -> None:
     if not datasetid:
         return
     
-    result_data = find_dataset_by_id(data, datasetid)
+    datasets = data["datasets"]
+    files = data["files"]
 
-
+    result_data = find_dataset_by_id(datasets, datasetid)
+    
     if result_data.empty:
         st.sidebar.write("No result found.")
         return
-
 
     contents = f"""
         **Dataset:**
@@ -128,7 +169,21 @@ def update_contents(data: pd.DataFrame) -> None:
         **Title:** *{result_data["Title"]}*<br />
         **Description:**<br /> {result_data["Description"]}
     """
-    st.session_state["content"] = contents
+
+    result_files = find_files_by_dataset_id(files, datasetid)
+    if result_data.empty:
+        st.sidebar.write("No files found.")
+    
+    files_contents = "<br />"
+
+
+    def format_file_info(row):
+        return f"**File name:** [{row['File name']}]({row['URL']})<br />**File type:** {row['File type']}<br />**File size:** {row['File size']}<br />"
+
+    files_contents = "<br />" + "<br />".join(result_files.apply(format_file_info, axis=1))
+
+
+    st.session_state["content"] = contents + files_contents
 
 def display_details(data: pd.DataFrame) -> None:
     """Show the details of the selected rows in the sidebar.
@@ -145,7 +200,8 @@ def display_details(data: pd.DataFrame) -> None:
         st.session_state["querydatasetid"] = 0
         st.session_state["content"] = ""
 
-    size_selected = len(data)
+    datasets = data["datasets"]
+    size_selected = len(datasets)
     if size_selected:
         if size_selected > 1:
             display_search_bar()
