@@ -6,9 +6,10 @@ import pandas as pd
 import itables
 from itables import JavascriptFunction
 
-import streamlit as st
 import streamlit.components.v1 as components
 
+
+from analysis import analysis_manager as am
 
 @st.cache_data
 def load_data() -> dict:
@@ -149,15 +150,13 @@ def update_contents(data: pd.DataFrame) -> None:
         dataframe.
     """
     datasetid = st.session_state["querydatasetid"]
-    if not datasetid:
-        return
-    
+
     datasets = data["datasets"]
     files = data["files"]
 
     result_data = find_dataset_by_id(datasets, datasetid)
     
-    if result_data.empty:
+    if result_data is None or result_data.empty:
         st.sidebar.write("No result found.")
         return
 
@@ -194,11 +193,13 @@ def update_contents(data: pd.DataFrame) -> None:
     datasetinfo_expander = st.sidebar.expander("Dataset informations:")
     datasetinfo_expander.markdown(contents)
 
-    filesinfo_expander = st.sidebar.expander("Files:")
+    filesinfo_expander = st.sidebar.expander("Files:", expanded=True)
     filesinfo_expander.markdown(files_contents)
+
 
     # st.session_state["content"] = contents + files_contents
     st.session_state["content"] = [datasetinfo_expander, filesinfo_expander]
+    st.session_state["files"] = result_files
 
     
 
@@ -219,17 +220,21 @@ def display_details(data: pd.DataFrame) -> None:
 
     datasets = data["datasets"]
     size_selected = len(datasets)
-    if size_selected:
-        if size_selected > 1:
-            display_search_bar()
-        
-        if "content"  in st.session_state:
-            update_contents(data)
-            # st.sidebar.markdown(st.session_state["content"], unsafe_allow_html=False)
-            with st.sidebar:
-                for comp in st.session_state["content"]:
-                    comp
-                
+    if not size_selected:
+        return
+    
+    if size_selected > 1:
+        display_search_bar()
+    
+    update_contents(data)
+
+    if not st.session_state["content"]:
+        return
+    
+    with st.sidebar:
+        [comp for comp in st.session_state["content"]]
+    am.init_analysis_tools()
+    
             
 
 
