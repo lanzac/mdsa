@@ -162,28 +162,45 @@ def update_contents(data: pd.DataFrame) -> None:
         return
 
     contents = f"""
-        **Dataset:**
-        [{result_data["Dataset"]} {result_data["ID"]}]({result_data["URL"]})<br />
-        **Creation date:** {result_data["Creation date"]}<br />
-        **Author(s):** {result_data["Authors"]}<br />
-        **Title:** *{result_data["Title"]}*<br />
-        **Description:**<br /> {result_data["Description"]}
+    **Dataset:**
+    [{result_data["Dataset"]} {result_data["ID"]}]({result_data["URL"]})  
+    **Creation date:** {result_data["Creation date"]}  
+    **Author(s):** {result_data["Authors"]}  
+    **Title:** {result_data["Title"]}  
+    **Description:**\n *{result_data["Description"]}*\n
     """
 
     result_files = find_files_by_dataset_id(files, datasetid)
     if result_data.empty:
         st.sidebar.write("No files found.")
     
-    files_contents = "<br />"
-
+    def format_size(size_str):
+        """ Converts a size in bytes into KB, MB, GB, etc. formats. """
+        size = int(size_str)
+        for unit in ['bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']:
+            if size < 1024.0:
+                return f"{size:.1f} {unit}"
+            size /= 1024.0
+        return f"{size:.1f} YB"  #  Returns in Yottabytes if the value is extremely large
 
     def format_file_info(row):
-        return f"**File name:** [{row['File name']}]({row['URL']})<br />**File type:** {row['File type']}<br />**File size:** {row['File size']}<br />"
+        return f"""
+    📄  {row['File name']}    
+    🗄️  {format_size(row['File size'])}\n
+        """
 
-    files_contents = "<br />" + "<br />".join(result_files.apply(format_file_info, axis=1))
+    files_contents = "".join(result_files.apply(format_file_info, axis=1))
 
+    datasetinfo_expander = st.sidebar.expander("Dataset informations:")
+    datasetinfo_expander.markdown(contents)
 
-    st.session_state["content"] = contents + files_contents
+    filesinfo_expander = st.sidebar.expander("Files:")
+    filesinfo_expander.markdown(files_contents)
+
+    # st.session_state["content"] = contents + files_contents
+    st.session_state["content"] = [datasetinfo_expander, filesinfo_expander]
+
+    
 
 def display_details(data: pd.DataFrame) -> None:
     """Show the details of the selected rows in the sidebar.
@@ -205,8 +222,15 @@ def display_details(data: pd.DataFrame) -> None:
     if size_selected:
         if size_selected > 1:
             display_search_bar()
-        update_contents(data)
-        st.sidebar.markdown(st.session_state["content"], unsafe_allow_html=True)
+        
+        if "content"  in st.session_state:
+            update_contents(data)
+            # st.sidebar.markdown(st.session_state["content"], unsafe_allow_html=False)
+            with st.sidebar:
+                for comp in st.session_state["content"]:
+                    comp
+                
+            
 
 
 def load_css() -> None:
