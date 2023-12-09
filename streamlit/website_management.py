@@ -151,6 +151,9 @@ def update_contents(data: pd.DataFrame) -> None:
     """
     datasetid = st.session_state["querydatasetid"]
 
+    if not datasetid:
+        return
+
     datasets = data["datasets"]
     files = data["files"]
 
@@ -170,7 +173,7 @@ def update_contents(data: pd.DataFrame) -> None:
     """
 
     result_files = find_files_by_dataset_id(files, datasetid)
-    if result_data.empty:
+    if result_files is None or result_files.empty:
         st.sidebar.write("No files found.")
     
     def format_size(size_str):
