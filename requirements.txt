@@ -7,3 +7,4 @@ streamlit>=1.18
 itables
 wordcloud
 watchdog
+bioblend
